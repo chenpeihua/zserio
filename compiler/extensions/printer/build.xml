@@ -11,9 +11,9 @@ zserio_extensions.build_dir   - Zserio extensions build directory.
                                 Default is "../../../build/compiler/extensions".
 zserio_extensions.install_dir - Zserio extensions install directory.
                                 Default is "../../../distr/zserio_libs".
-zserio_printer.build_dir          - Directory where to put generated files.
+zserio_printer.build_dir      - Directory where to put generated files.
                                 Default is "${zserio_extensions.build_dir}/printer".
-zserio_printer.install_dir        - Directory where to install Zserio Printer Extension jar file.
+zserio_printer.install_dir    - Directory where to install Zserio Printer Extension jar file.
                                 Default is "${zserio_extensions.install_dir}".
 zserio_core.jar_file          - Zserio core jar file used for classpath.
                                 Default is "${zserio_extensions.build_dir}/../core/jar/zserio_core.jar".
@@ -43,7 +43,7 @@ findbugs.home_dir             - Location of the findbugs tool. If not set, findb
     <loadfile
         encoding="UTF-8"
         property="zserio_printer.version"
-        srcFile="${basedir}/src/zserio/emit/printer/PrinterExtensionVersion.java">
+        srcFile="${basedir}/src/zserio/emit/printer/PrinterExtension.java">
         <filterchain>
             <striplinebreaks/>
             <tokenfilter>

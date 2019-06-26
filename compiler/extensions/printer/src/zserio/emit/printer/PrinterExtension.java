@@ -19,13 +19,13 @@ public class PrinterExtension implements Extension
     @Override
     public String getVersion()
     {
-        return "1.2.0";
+        return VERSION_STRING;
     }
 
     @Override
     public void registerOptions(Options options)
     {
-        final Option option = new Option(OptionPrinter, false, "print AST nodes on standard output");
+        final Option option = new Option(OPTION_PRINTER, false, "print AST nodes on standard output");
         option.setRequired(false);
         options.addOption(option);
     }
@@ -33,7 +33,7 @@ public class PrinterExtension implements Extension
     @Override
     public boolean isEnabled(Parameters parameters)
     {
-        return parameters.argumentExists(OptionPrinter);
+        return parameters.argumentExists(OPTION_PRINTER);
     }
 
     @Override
@@ -43,5 +43,7 @@ public class PrinterExtension implements Extension
         rootNode.emit(printerEmitter);
     }
 
-    private final static String OptionPrinter = "print";
+    private final static String VERSION_STRING = "1.2.0";
+    private final static String OPTION_PRINTER = "print";
 }
+
