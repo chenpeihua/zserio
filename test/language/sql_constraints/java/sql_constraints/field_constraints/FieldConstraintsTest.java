@@ -17,10 +17,6 @@ import test_utils.JdbcUtil;
 
 import sql_constraints.TestDb;
 
-import sql_constraints.constraint_imports.ImportedConstant;
-import sql_constraints.constraint_imports.ImportedEnum;
-import sql_constraints.constraint_imports.ImportedBitmask;
-
 public class FieldConstraintsTest
 {
     @BeforeClass
@@ -92,7 +88,7 @@ public class FieldConstraintsTest
         final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
         final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
         fillRow(row);
-        row.setSqlCheckConstant(ConstraintsConstant.ConstraintsConstant);
+        row.setSqlCheckConstant(WRONG_CONSTRAINTS_CONSTANT);
         fieldConstraintsTable.write(Arrays.asList(row));
     }
 
@@ -105,59 +101,7 @@ public class FieldConstraintsTest
         final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
         final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
         fillRow(row);
-        row.setSqlCheckImportedConstant(ImportedConstant.ImportedConstant);
-        fieldConstraintsTable.write(Arrays.asList(row));
-    }
-
-    @Test
-    public void sqlCheckEnum() throws IOException, SQLException
-    {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage("CHECK constraint failed: fieldConstraintsTable");
-
-        final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
-        final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
-        fillRow(row);
-        row.setSqlCheckEnum(ConstraintsEnum.VALUE2);
-        fieldConstraintsTable.write(Arrays.asList(row));
-    }
-
-    @Test
-    public void sqlCheckImportedEnum() throws IOException, SQLException
-    {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage("CHECK constraint failed: fieldConstraintsTable");
-
-        final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
-        final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
-        fillRow(row);
-        row.setSqlCheckImportedEnum(ImportedEnum.TWO);
-        fieldConstraintsTable.write(Arrays.asList(row));
-    }
-
-    @Test
-    public void sqlCheckBitmask() throws IOException, SQLException
-    {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage("CHECK constraint failed: fieldConstraintsTable");
-
-        final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
-        final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
-        fillRow(row);
-        row.setSqlCheckBitmask(ConstraintsBitmask.Values.MASK2);
-        fieldConstraintsTable.write(Arrays.asList(row));
-    }
-
-    @Test
-    public void sqlCheckImportedBitmask() throws IOException, SQLException
-    {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage("CHECK constraint failed: fieldConstraintsTable");
-
-        final FieldConstraintsTable fieldConstraintsTable = database.getFieldConstraintsTable();
-        final FieldConstraintsTableRow row = new FieldConstraintsTableRow();
-        fillRow(row);
-        row.setSqlCheckImportedBitmask(ImportedBitmask.Values.MASK2);
+        row.setSqlCheckImportedConstant(WRONG_IMPORTED_CONSTRAINTS_CONSTANT);
         fieldConstraintsTable.write(Arrays.asList(row));
     }
 
@@ -207,10 +151,6 @@ public class FieldConstraintsTest
         row.setSqlDefaultNull(1);
         row.setSqlCheckConstant(1);
         row.setSqlCheckImportedConstant(1);
-        row.setSqlCheckEnum(ConstraintsEnum.VALUE1);
-        row.setSqlCheckImportedEnum(ImportedEnum.ONE);
-        row.setSqlCheckBitmask(ConstraintsBitmask.Values.MASK1);
-        row.setSqlCheckImportedBitmask(ImportedBitmask.Values.MASK1);
         row.setSqlCheckUnicodeEscape(UNICODE_ESCAPE_CONST);
         row.setSqlCheckHexEscape(HEX_ESCAPE_CONST);
         row.setSqlCheckOctalEscape(OCTAL_ESCAPE_CONST);
@@ -221,6 +161,9 @@ public class FieldConstraintsTest
     private static final short UNICODE_ESCAPE_CONST = 1;
     private static final short HEX_ESCAPE_CONST = 2;
     private static final short OCTAL_ESCAPE_CONST = 3;
+
+    private static final int WRONG_CONSTRAINTS_CONSTANT = 124;
+    private static final long WRONG_IMPORTED_CONSTRAINTS_CONSTANT = 322;
 
     private static final short WRONG_UNICODE_ESCAPE_CONST = 0;
     private static final short WRONG_HEX_ESCAPE_CONST = 0;

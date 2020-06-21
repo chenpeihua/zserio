@@ -184,6 +184,7 @@ public abstract class CompoundType extends TemplatableType
      */
     void check()
     {
+        checkSymbolNames();
         checkDirectRecursion();
         checkIndirectRecursion(this, this);
     }
@@ -209,6 +210,24 @@ public abstract class CompoundType extends TemplatableType
                 throw new ParserException(field, "Field '" + field.getName() +
                         "' cannot be a sql table!");
         }
+    }
+
+    /**
+     * Checks validity of symbol names for most compound types. Can be overridden by descendants.
+     */
+    void checkSymbolNames()
+    {
+        // parameters and fields cannot clash (difference only in case of the first letter is still clash!)
+        IdentifierValidator validator = new IdentifierValidator();
+        for (Parameter param : typeParameters)
+            validator.validateSymbol(param.getName(), param);
+        for (Field field : fields)
+            validator.validateSymbol(field.getName(), field);
+
+        // function names cannot clash (difference only in case of the first letter is still clash!)
+        validator = new IdentifierValidator();
+        for (Function function : functions)
+            validator.validateSymbol(function.getName(), function);
     }
 
     private void checkDirectRecursion()

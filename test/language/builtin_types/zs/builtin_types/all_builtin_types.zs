@@ -1,5 +1,11 @@
 package builtin_types.all_builtin_types;
 
+struct ExternalStructure
+{
+    uint8           value;
+    bit:2           rest;
+};
+
 struct AllBuiltInTypes
 {
     // boolean type
@@ -57,6 +63,7 @@ struct AllBuiltInTypes
     varuint32       varuint32Type;
     varuint64       varuint64Type;
     varuint         varuintType;
+    varsize         varsizeType;
 
     // variable signed integer types
     varint16        varint16Type;

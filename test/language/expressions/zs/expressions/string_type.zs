@@ -1,12 +1,24 @@
 package expressions.string_type;
 
+const string STRING_CONSTANT = "CONSTANT";
+
 struct StringTypeExpression
 {
-    string firstValue;
-    string secondValue;
+    string value;
 
-    function string append()
+    function string returnValue()
     {
-        return firstValue + secondValue + "_append" + "ix";
+        return value;
+    }
+
+    function string appendix()
+    {
+        // This is intended to check concatenation of two string literals.
+        return "append" + "ix";
+    }
+
+    function string appendToConst()
+    {
+        return STRING_CONSTANT + "_" + appendix();
     }
 };

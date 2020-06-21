@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import zserio.runtime.io.BitBuffer;
+import zserio.runtime.VarSizeUtil;
 
 /**
  * The class provides common methods to calculate bit size of an variable stored in the bit stream.
@@ -23,8 +24,7 @@ public class BitSizeOfCalculator
     {
         final short absoluteValue = (short) Math.abs(value);
         if (absoluteValue >= (short)(1 << (6 + 8)))
-            throw new ZserioError("getBitSizeOfVarInt16: Value " + value + " is out of range for " +
-                    "VarInt16.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varint16!");
 
         return (absoluteValue < (short) 1 << 6) ? 8 : 16;
     }
@@ -42,8 +42,7 @@ public class BitSizeOfCalculator
     {
         final int absoluteValue = Math.abs(value);
         if (absoluteValue >= (1 << (6 + 7 + 7 + 8)))
-            throw new ZserioError("getBitSizeOfVarInt32: Value " + value + " is out of range for " +
-                    "VarInt32.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varint32!");
 
         int bitSize = 0;
         if (absoluteValue < 1 << 6)
@@ -79,8 +78,7 @@ public class BitSizeOfCalculator
     {
         final long absoluteValue = Math.abs(value);
         if (absoluteValue >= (1L << (6 + 7 + 7 + 7 + 7 + 7 + 7 + 8)))
-            throw new ZserioError("getBitSizeOfVarInt64: Value " + value + " is out of range for " +
-                    "VarInt64.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varint64!");
 
         int bitSize = 0;
         if (absoluteValue < (1L << 6))
@@ -131,8 +129,7 @@ public class BitSizeOfCalculator
     public static int getBitSizeOfVarUInt16(short value) throws ZserioError
     {
         if (value < 0)
-            throw new ZserioError("getBitSizeOfVarUInt16: Value " + value + " is out of range for " +
-                    "VarUInt16.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varuint16!");
 
         return (value < (1 << 7)) ? 8 : 16;
     }
@@ -149,8 +146,7 @@ public class BitSizeOfCalculator
     public static int getBitSizeOfVarUInt32(int value) throws ZserioError
     {
         if (value < 0 || value >= (1 << (7 + 7 + 7 + 8)))
-            throw new ZserioError("getBitSizeOfVarUInt32: Value " + value + " is out of range for " +
-                    "VarUInt32.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varuint32!");
 
         int bitSize = 0;
         if (value < (1 << 7))
@@ -185,8 +181,7 @@ public class BitSizeOfCalculator
     public static int getBitSizeOfVarUInt64(long value) throws ZserioError
     {
         if (value < 0 || value >= (1L << (7 + 7 + 7 + 7 + 7 + 7 + 7 + 8)))
-            throw new ZserioError("getBitSizeOfVarUInt64: Value " + value + " is out of range for " +
-                    "VarUInt64.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varuint64!");
 
         int bitSize = 0;
         if (value < (1L << 7))
@@ -294,8 +289,7 @@ public class BitSizeOfCalculator
     public static int getBitSizeOfVarUInt(BigInteger value) throws ZserioError
     {
         if (value.compareTo(BigInteger.ZERO) == -1 || value.compareTo(VARUINT_MAX) == 1)
-            throw new ZserioError("getBitSizeOfVarUInt: Value " + value + " is out of range for " +
-                    "VarUInt.");
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varuint!");
 
         int bitSize = 0;
         if (value.compareTo(BigInteger.valueOf(1L << 7)) == -1)
@@ -339,6 +333,45 @@ public class BitSizeOfCalculator
     }
 
     /**
+     * Gets the bit size of varsize value which is stored in bit stream.
+     *
+     * @param value varsize value for calculation.
+     *
+     * @return Length of varsize value in bits.
+     *
+     * @throws ZserioError Throws if given value is out of range for varsize type.
+     */
+    public static int getBitSizeOfVarSize(int value) throws ZserioError
+    {
+        if (value < 0)
+            throw new ZserioError("BitSizeOfCalculator: Value '" + value + "' is out of range for varsize!");
+
+        int bitSize = 0;
+        if (value < (1 << 7))
+        {
+            bitSize = 8;
+        }
+        else if (value < (1 << 14))
+        {
+            bitSize = 16;
+        }
+        else if (value < (1 << 21))
+        {
+            bitSize = 24;
+        }
+        else if (value < (1 << 28))
+        {
+            bitSize = 32;
+        }
+        else
+        {
+            bitSize = 40;
+        }
+
+        return bitSize;
+    }
+
+    /**
      * Gets the bit size of Zserio string value which is stored in bit stream.
      *
      * @param value Zserio string value for calculation.
@@ -349,10 +382,10 @@ public class BitSizeOfCalculator
      */
     public static int getBitSizeOfString(String value) throws ZserioError
     {
-        final long stringBytes = sizeOfString(value);
+        final int stringBytes = sizeOfString(value);
 
-        // the string consists of varuint64 for size followed by the UTF-8 encoded string
-        return getBitSizeOfVarUInt64(stringBytes) + (int)BitPositionUtil.bytesToBits(stringBytes);
+        // the string consists of varsize for size followed by the UTF-8 encoded string
+        return getBitSizeOfVarSize(stringBytes) + (int)BitPositionUtil.bytesToBits(stringBytes);
     }
 
     /**
@@ -368,13 +401,13 @@ public class BitSizeOfCalculator
     {
         final long bitBufferSize = bitBuffer.getBitSize();
 
-        // bit buffer consists of varuint64 for bit size followed by the bits
-        return getBitSizeOfVarUInt64(bitBufferSize) + (int)bitBufferSize;
+        // bit buffer consists of varsize for bit size followed by the bits
+        return getBitSizeOfVarSize(VarSizeUtil.convertBitBufferSizeToInt(bitBufferSize)) + (int)bitBufferSize;
     }
 
-    private static long sizeOfString(final String str)
+    private static int sizeOfString(final String str)
     {
-        long size = 0;
+        int size = 0;
         try
         {
             size = str.getBytes("UTF-8").length;

@@ -79,11 +79,8 @@ public class ZserioParserTest
     @Test
     public void fieldAlignment()
     {
-        checkParseTree("fieldAlignment", "align(15):", "(fieldAlignment align ( 15 ) :)");
-
-        assertParseError("fieldAlignment", "align(\"15\"):",
-                "mismatched input '\"15\"' expecting DECIMAL_LITERAL");
-        assertParseError("fieldAlignment", "align(15.4):", "mismatched input '15.4' expecting DECIMAL_LITERAL");
+        checkParseTree("fieldAlignment", "align(15):",
+                "(fieldAlignment align ( (expression (literal 15)) ) :)");
     }
 
     @Test
@@ -154,7 +151,7 @@ public class ZserioParserTest
                 "offset:" +
                 "    uint32 value = 10 if hasValue : value > 0;",
                 "(structureFieldDefinition " +
-                        "(fieldAlignment align ( 10 ) :) " +
+                        "(fieldAlignment align ( (expression (literal 10)) ) :) " +
                         "(fieldOffset (expression (id offset)) :) " +
                         "(fieldTypeId (typeInstantiation (typeReference (builtinType (intType uint32)))) " +
                                 "(id value)) " +
@@ -230,7 +227,7 @@ public class ZserioParserTest
 
         checkParseTree("sqlTableFieldDefinition", "uint32 field sql \"PRIMARY KEY\";",
                 "(sqlTableFieldDefinition (typeInstantiation (typeReference (builtinType (intType uint32)))) " +
-                        "(id field) (sqlConstraint sql \"PRIMARY KEY\") ;)");
+                        "(id field) (sqlConstraint sql (expression (literal \"PRIMARY KEY\"))) ;)");
     };
 
     @Test
@@ -238,7 +235,7 @@ public class ZserioParserTest
     {
         checkParseTree("sqlConstraintDefinition", "sql \"languageid='languageCode', notindexed='frequency'\";",
                 "(sqlConstraintDefinition (sqlConstraint sql " +
-                        "\"languageid='languageCode', notindexed='frequency'\") ;)");
+                        "(expression (literal \"languageid='languageCode', notindexed='frequency'\"))) ;)");
     }
 
     @Test
@@ -270,16 +267,19 @@ public class ZserioParserTest
     @Test
     public void pubsubMessageDefinition()
     {
-        checkParseTree("pubsubMessageDefinition", "publish(\"pubsub/test\") MessageType messageId;",
-                "(pubsubMessageDefinition (topicDefinition publish ( \"pubsub/test\" )) " +
+        checkParseTree("pubsubMessageDefinition", "publish topic(\"pubsub/test\") MessageType messageId;",
+                "(pubsubMessageDefinition (topicDefinition publish topic ( (expression " +
+                        "(literal \"pubsub/test\")) )) " +
                         "(typeReference (qualifiedName (id MessageType))) (id messageId) ;)");
 
-        checkParseTree("pubsubMessageDefinition", "subscribe(\"pubsub/test\") MessageType messageId;",
-                "(pubsubMessageDefinition (topicDefinition subscribe ( \"pubsub/test\" )) " +
+        checkParseTree("pubsubMessageDefinition", "subscribe topic(\"pubsub/test\") MessageType messageId;",
+                "(pubsubMessageDefinition (topicDefinition subscribe topic ( (expression " +
+                        "(literal \"pubsub/test\")) )) " +
                         "(typeReference (qualifiedName (id MessageType))) (id messageId) ;)");
 
-        checkParseTree("pubsubMessageDefinition", "pubsub (\"pubsub/test\") MessageType messageId;",
-                "(pubsubMessageDefinition (topicDefinition pubsub ( \"pubsub/test\" )) " +
+        checkParseTree("pubsubMessageDefinition", "topic(\"pubsub/test\") MessageType messageId;",
+                "(pubsubMessageDefinition (topicDefinition topic ( (expression " +
+                        "(literal \"pubsub/test\")) )) " +
                         "(typeReference (qualifiedName (id MessageType))) (id messageId) ;)");
     }
 

@@ -1,18 +1,11 @@
 set(ZSERIO_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/gen)
 set(ZSERIO_GENERATED_SOURCES
-    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/ImportedBitmask.cpp
-    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/ImportedBitmask.h
-    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/ImportedConstant.h
-    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/ImportedEnum.cpp
-    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/ImportedEnum.h
+    ${ZSERIO_GEN_DIR}/sql_constraints/constraint_imports/IMPORTED_CONSTRAINTS_CONSTANT.h
 
-    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/ConstraintsBitmask.cpp
-    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/ConstraintsBitmask.h
-    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/ConstraintsConstant.h
-    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/ConstraintsEnum.cpp
-    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/ConstraintsEnum.h
+    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/CONSTRAINTS_CONSTANT.h
     ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/FieldConstraintsTable.cpp
     ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/FieldConstraintsTable.h
+    ${ZSERIO_GEN_DIR}/sql_constraints/field_constraints/NOT_NULL_CONSTRAINT.h
 
     ${ZSERIO_GEN_DIR}/sql_constraints/table_constraints/TableConstraintsTable.cpp
     ${ZSERIO_GEN_DIR}/sql_constraints/table_constraints/TableConstraintsTable.h
@@ -27,14 +20,15 @@ zserio_add_library(TARGET sql_constraints_zs
     OUT_DIR ${ZSERIO_GEN_DIR}
     OUT_FILES ${ZSERIO_GENERATED_SOURCES}
     ZSERIO_CORE_DIR ${ZSERIO_JAR_DIR}
+    ZSERIO_CPP_DIR ${ZSERIO_CPP_DISTR_DIR}
     ZSERIO_OPTIONS -withoutSourcesAmalgamation
 )
 
 target_include_directories(sql_constraints_zs SYSTEM PRIVATE ${SQLITE_INCDIR})
 
 add_test_sources(
-    ${ZSERIO_CPP_DIR}/FieldConstraintsTest.cpp
-    ${ZSERIO_CPP_DIR}/TableConstraintsTest.cpp
+    cpp/FieldConstraintsTest.cpp
+    cpp/TableConstraintsTest.cpp
 )
 
 add_test_dependencies(sql_constraints_zs)

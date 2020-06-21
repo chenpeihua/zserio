@@ -3,9 +3,7 @@ package zserio.ast;
 import zserio.tools.HashUtil;
 
 /**
- * AST node for Constant types.
- *
- * Constant types are Zserio types as well.
+ * AST node for Constants.
  */
 public class Constant extends DocumentableAstNode implements Comparable<Constant>
 {
@@ -109,7 +107,7 @@ public class Constant extends DocumentableAstNode implements Comparable<Constant
     }
 
     /**
-     * Checks the constant type.
+     * Checks the constant.
      */
     void check()
     {
@@ -128,16 +126,6 @@ public class Constant extends DocumentableAstNode implements Comparable<Constant
 
         // check integer constant range
         ExpressionUtil.checkIntegerExpressionRange(valueExpression, typeInstantiation, name);
-
-        // check constant name
-        final ZserioType definedType = pkg.getVisibleType(this, PackageName.EMPTY, getName());
-        if (definedType != null)
-        {
-            final ParserStackedException stackedException = new ParserStackedException(getLocation(),
-                    "'" + getName() + "' is a defined type in this package!");
-            stackedException.pushMessage(definedType.getLocation(), "    First defined here");
-            throw stackedException;
-        }
     }
 
     private final Package pkg;

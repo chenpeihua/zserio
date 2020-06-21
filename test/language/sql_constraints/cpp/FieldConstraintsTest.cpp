@@ -7,9 +7,6 @@
 
 #include "sql_constraints/TestDb.h"
 #include "sql_constraints/field_constraints/FieldConstraintsTable.h"
-#include "sql_constraints/field_constraints/ConstraintsConstant.h"
-#include "sql_constraints/constraint_imports/ImportedConstant.h"
-#include "sql_constraints/constraint_imports/ImportedEnum.h"
 
 namespace sql_constraints
 {
@@ -40,10 +37,6 @@ protected:
         row.setSqlDefaultNull(1);
         row.setSqlCheckConstant(1);
         row.setSqlCheckImportedConstant(1);
-        row.setSqlCheckEnum(ConstraintsEnum::VALUE1);
-        row.setSqlCheckImportedEnum(constraint_imports::ImportedEnum::ONE);
-        row.setSqlCheckBitmask(ConstraintsBitmask::Values::MASK1);
-        row.setSqlCheckImportedBitmask(constraint_imports::ImportedBitmask::Values::MASK1);
         row.setSqlCheckUnicodeEscape(UNICODE_ESCAPE_CONST);
         row.setSqlCheckHexEscape(HEX_ESCAPE_CONST);
         row.setSqlCheckOctalEscape(OCTAL_ESCAPE_CONST);
@@ -54,6 +47,9 @@ protected:
     static const uint8_t UNICODE_ESCAPE_CONST;
     static const uint8_t HEX_ESCAPE_CONST;
     static const uint8_t OCTAL_ESCAPE_CONST;
+
+    static const uint16_t WRONG_CONSTRAINTS_CONSTANT;
+    static const uint32_t WRONG_IMPORTED_CONSTRAINTS_CONSTANT;
 
     static const uint8_t WRONG_UNICODE_ESCAPE_CONST;
     static const uint8_t WRONG_HEX_ESCAPE_CONST;
@@ -67,6 +63,9 @@ const char FieldConstraintsTest::DB_FILE_NAME[] = "field_constraints_test.sqlite
 const uint8_t FieldConstraintsTest::UNICODE_ESCAPE_CONST = 1;
 const uint8_t FieldConstraintsTest::HEX_ESCAPE_CONST = 2;
 const uint8_t FieldConstraintsTest::OCTAL_ESCAPE_CONST = 3;
+
+const uint16_t FieldConstraintsTest::WRONG_CONSTRAINTS_CONSTANT = 124;
+const uint32_t FieldConstraintsTest::WRONG_IMPORTED_CONSTRAINTS_CONSTANT = 322;
 
 const uint8_t FieldConstraintsTest::WRONG_UNICODE_ESCAPE_CONST = 0;
 const uint8_t FieldConstraintsTest::WRONG_HEX_ESCAPE_CONST = 0;
@@ -110,7 +109,7 @@ TEST_F(FieldConstraintsTest, sqlCheckConstant)
     FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
     FieldConstraintsTable::Row row;
     fillRow(row);
-    row.setSqlCheckConstant(ConstraintsConstant);
+    row.setSqlCheckConstant(WRONG_CONSTRAINTS_CONSTANT);
     std::vector<FieldConstraintsTable::Row> rows;
     rows.push_back(row);
     ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);
@@ -121,51 +120,7 @@ TEST_F(FieldConstraintsTest, sqlCheckImportedConstant)
     FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
     FieldConstraintsTable::Row row;
     fillRow(row);
-    row.setSqlCheckImportedConstant(constraint_imports::ImportedConstant);
-    std::vector<FieldConstraintsTable::Row> rows;
-    rows.push_back(row);
-    ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);
-}
-
-TEST_F(FieldConstraintsTest, sqlCheckEnum)
-{
-    FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
-    FieldConstraintsTable::Row row;
-    fillRow(row);
-    row.setSqlCheckEnum(ConstraintsEnum::VALUE2);
-    std::vector<FieldConstraintsTable::Row> rows;
-    rows.push_back(row);
-    ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);
-}
-
-TEST_F(FieldConstraintsTest, sqlCheckImportedEnum)
-{
-    FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
-    FieldConstraintsTable::Row row;
-    fillRow(row);
-    row.setSqlCheckImportedEnum(constraint_imports::ImportedEnum::TWO);
-    std::vector<FieldConstraintsTable::Row> rows;
-    rows.push_back(row);
-    ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);
-}
-
-TEST_F(FieldConstraintsTest, sqlCheckBitmask)
-{
-    FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
-    FieldConstraintsTable::Row row;
-    fillRow(row);
-    row.setSqlCheckBitmask(ConstraintsBitmask::Values::MASK2);
-    std::vector<FieldConstraintsTable::Row> rows;
-    rows.push_back(row);
-    ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);
-}
-
-TEST_F(FieldConstraintsTest, sqlCheckImportedBitmask)
-{
-    FieldConstraintsTable& fieldConstraintsTable = m_database->getFieldConstraintsTable();
-    FieldConstraintsTable::Row row;
-    fillRow(row);
-    row.setSqlCheckImportedBitmask(constraint_imports::ImportedBitmask::Values::MASK2);
+    row.setSqlCheckImportedConstant(WRONG_IMPORTED_CONSTRAINTS_CONSTANT);
     std::vector<FieldConstraintsTable::Row> rows;
     rows.push_back(row);
     ASSERT_THROW(fieldConstraintsTable.write(rows), zserio::SqliteException);

@@ -4,6 +4,7 @@
 #include "zserio/BitStreamReader.h"
 #include "zserio/BitPositionUtil.h"
 #include "zserio/BitSizeOfCalculator.h"
+#include "zserio/CppRuntimeException.h"
 
 #include "offsets/uint64_offset/UInt64Offset.h"
 
@@ -21,7 +22,7 @@ protected:
     {
         // offset
         writer.writeBits64((wrongOffset ? WRONG_OFFSET : OFFSET), 64);
-        writer.writeVarUInt64(ARRAY_SIZE);
+        writer.writeVarSize(static_cast<uint32_t>(ARRAY_SIZE));
         for (size_t i = 0; i < ARRAY_SIZE; ++i)
         {
             writer.writeSignedBits(0, 8);

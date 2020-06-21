@@ -29,7 +29,6 @@ set(ZSERIO_CPP_RUNTIME_LIB_SRCS
     zserio/BitPositionUtil.h
     zserio/BitSizeOfCalculator.cpp
     zserio/BitSizeOfCalculator.h
-    zserio/BitStreamException.h
     zserio/BitStreamReader.cpp
     zserio/BitStreamReader.h
     zserio/BitStreamWriter.cpp
@@ -57,8 +56,8 @@ set(ZSERIO_CPP_RUNTIME_LIB_SRCS
     zserio/StringConvertUtil.cpp
     zserio/StringConvertUtil.h
     zserio/Types.h
-    zserio/VarUInt64Util.cpp
-    zserio/VarUInt64Util.h
+    zserio/VarSizeUtil.cpp
+    zserio/VarSizeUtil.h
 )
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -67,6 +66,8 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
                  APPEND PROPERTY COMPILE_DEFINITIONS ZSERIO_RUNTIME_64BIT)
 endif ()
 
-add_library(ZserioCppRuntime STATIC ${ZSERIO_CPP_RUNTIME_LIB_SRCS})
+add_library(${PROJECT_NAME} STATIC ${ZSERIO_CPP_RUNTIME_LIB_SRCS})
 
-target_include_directories(ZserioCppRuntime PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+

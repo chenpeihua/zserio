@@ -20,14 +20,58 @@ public:
     }
 
 protected:
-    zserio::BitStreamWriter m_writer;
-    zserio::BitStreamWriter m_externalBufferWriter;
-    zserio::BitStreamWriter m_dummyBufferWriter;
+    BitStreamWriter m_writer;
+    BitStreamWriter m_externalBufferWriter;
+    BitStreamWriter m_dummyBufferWriter;
 
     static const size_t externalBufferSize = 512;
 
     uint8_t m_externalBuffer[externalBufferSize];
 };
+
+TEST_F(BitStreamWriterTest, bitBufferConstructor)
+{
+    BitBuffer bitBuffer(11);
+    BitStreamWriter writer(bitBuffer);
+    size_t writeBufferByteSize = 0;
+    const uint8_t* writeBuffer = writer.getWriteBuffer(writeBufferByteSize);
+    ASSERT_EQ(bitBuffer.getBuffer(), writeBuffer);
+    ASSERT_EQ(bitBuffer.getByteSize(), writeBufferByteSize);
+
+    writer.writeBits(0x1F, 5);
+    writer.writeBits(0x07, 3);
+    ASSERT_EQ(0xFF, writeBuffer[0]);
+    ASSERT_THROW(writer.writeBits(0x0F, 4), CppRuntimeException);
+    writer.writeBits(0x07, 3);
+    ASSERT_EQ(0xE0, writeBuffer[1]);
+}
+
+TEST_F(BitStreamWriterTest, writeUnalignedData)
+{
+    // number expected to be written at offset
+    const uint8_t testValue = 123;
+
+    for (int offset = 0; offset <= 64; ++offset)
+    {
+        BitBuffer bitBuffer(8 + offset);
+        // fill the buffer with 1s to check proper masking
+        std::memset(bitBuffer.getBuffer(), 0xFF, bitBuffer.getByteSize());
+
+        BitStreamWriter writer(bitBuffer);
+
+        writer.writeBits64(0, offset);
+        writer.writeBits(testValue, 8);
+
+        // check eof
+        ASSERT_THROW(writer.writeBits64(0, 1), CppRuntimeException);
+
+        // check written value
+        uint8_t writtenTestValue = bitBuffer.getBuffer()[offset / 8] << (offset % 8);
+        if (offset % 8 != 0)
+            writtenTestValue |= bitBuffer.getBuffer()[offset / 8 + 1] >> (8 - (offset % 8));
+        ASSERT_EQ(testValue, writtenTestValue) << "Offset: " << offset;
+    }
+}
 
 TEST_F(BitStreamWriterTest, writeBits)
 {
@@ -173,6 +217,39 @@ TEST_F(BitStreamWriterTest, writeVarUInt)
 {
     ASSERT_NO_THROW(m_writer.writeVarUInt(0));
     ASSERT_NO_THROW(m_writer.writeVarUInt(UINT64_MAX));
+}
+
+TEST_F(BitStreamWriterTest, writeVarSize)
+{
+    // check value out of range
+    const uint32_t outOfRangeValue = ((uint32_t) 1) << (2 + 7 + 7 + 7 + 8);
+    ASSERT_THROW(m_writer.writeVarSize(outOfRangeValue), CppRuntimeException);
+}
+
+TEST_F(BitStreamWriterTest, writeBitBuffer)
+{
+    static const size_t bitBufferBitSize = 24;
+    BitBuffer bitBuffer(std::vector<uint8_t>{0xAB, 0xAB, 0xAB}, bitBufferBitSize);
+
+    {
+        ASSERT_NO_THROW(m_writer.writeBitBuffer(bitBuffer));
+        size_t bufferSize = 0;
+        const uint8_t* buffer = m_writer.getWriteBuffer(bufferSize);
+        ASSERT_EQ(bitBufferBitSize / 8, bufferSize - 1); // first byte is bit buffer size
+        BitBuffer readBitBuffer{buffer + 1, bitBufferBitSize};
+        ASSERT_EQ(bitBuffer, readBitBuffer);
+    }
+
+    {
+        ASSERT_NO_THROW(m_externalBufferWriter.writeBitBuffer(bitBuffer));
+        size_t bufferSize = 0;
+        const uint8_t* buffer = m_externalBufferWriter.getWriteBuffer(bufferSize);
+        BitBuffer readBitBuffer{buffer + 1, bitBufferBitSize}; // first byte is bit buffer size
+        ASSERT_EQ(bitBuffer, readBitBuffer);
+    }
+
+    ASSERT_NO_THROW(m_dummyBufferWriter.writeBitBuffer(bitBuffer));
+    ASSERT_EQ(bitBufferBitSize + 8, m_dummyBufferWriter.getBitPosition()); // first byte is bit buffer size
 }
 
 TEST_F(BitStreamWriterTest, hasWriteBuffer)

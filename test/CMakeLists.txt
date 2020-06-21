@@ -17,7 +17,6 @@ set(CPPCHECK_HOME "" CACHE PATH "Home directory of cppcheck tool. If empty, cppc
 set(ZSERIO_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(ZSERIO_RELEASE_ROOT "${ZSERIO_PROJECT_ROOT}/distr" CACHE PATH "Root directory of Zserio release binaries.")
 set(ZSERIO_TEST_NAME "*" CACHE STRING "Example test name to run. Empty means all example tests.")
-set(ZSERIO_CPP_DIR "cpp")
 
 # add gtest library
 set(CMAKE_MODULE_PATH ${ZSERIO_PROJECT_ROOT}/cmake)
@@ -33,7 +32,6 @@ compiler_set_pthread()
 compiler_set_static_clibs()
 compiler_set_warnings()
 compiler_set_warnings_as_errors()
-set(CMAKE_CXX_STANDARD 11)
 
 # add SQLite3 for testing
 include(sqlite_utils)
@@ -42,7 +40,8 @@ sqlite_add_library(${ZSERIO_PROJECT_ROOT})
 # add zserio runtime library
 include(zserio_utils)
 set(ZSERIO_JAR_DIR "${ZSERIO_RELEASE_ROOT}/zserio_libs")
-set(ZSERIO_RUNTIME_LIBRARY_DIR "${ZSERIO_RELEASE_ROOT}/runtime_libs/${ZSERIO_CPP_DIR}")
+set(ZSERIO_CPP_DISTR_DIR "${ZSERIO_JAR_DIR}")
+set(ZSERIO_RUNTIME_LIBRARY_DIR "${ZSERIO_RELEASE_ROOT}/runtime_libs/cpp")
 zserio_add_runtime_library(RUNTIME_LIBRARY_DIR "${ZSERIO_RUNTIME_LIBRARY_DIR}")
 
 # functions to set globals called by included CMake lists
@@ -81,6 +80,7 @@ endif ()
 
 add_executable(${PROJECT_NAME} ${TEST_SOURCES_LIST})
 
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
 target_link_libraries(${PROJECT_NAME} gtest_main ${TEST_DEPENDENCIES_LIST})
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SQLITE_INCDIR})

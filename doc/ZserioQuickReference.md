@@ -24,6 +24,7 @@ varuint16
 varuint32
 varuint64
 varuint
+varsize
 bit:n
 bit<expr>
 ```
@@ -279,14 +280,9 @@ struct MessageType
     string text;
 };
 
-pubsub Provider
+pubsub PublishSubscribe
 {
-    publish("topic/definition") MessageType message;
-};
-
-pubsub Client
-{
-    subscribe("topic/definition") MessageType message;
+    topic("topic/definition") MessageType message;
 };
 ```
 

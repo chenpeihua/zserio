@@ -35,10 +35,12 @@ set(ZSERIO_CPP_RUNTIME_TEST_SRCS
     zserio/OptionalHolderTest.cpp
     zserio/SqliteConnectionTest.cpp
     zserio/StringConvertUtilTest.cpp
-    zserio/VarUInt64UtilTest.cpp
+    zserio/VarSizeUtilTest.cpp
 )
 
 add_executable(${PROJECT_NAME} ${ZSERIO_CPP_RUNTIME_TEST_SRCS})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
 target_include_directories(${PROJECT_NAME} PRIVATE ../src)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SQLITE_INCDIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ZserioCppRuntime gtest_main ${SQLITE_LIBRARY})

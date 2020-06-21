@@ -79,7 +79,7 @@ class NestedOffsetTest(unittest.TestCase):
     def _writeNestedOffsetToStream(self, writer, writeWrongOffsets):
         writer.writeBits(self.WRONG_TERMINATOR_OFFSET if writeWrongOffsets else self.TERMINATOR_OFFSET, 32)
         writer.writeBool(self.BOOL_VALUE)
-        writer.writeVarUInt64(self.api.NestedOffsetUnion.CHOICE_nestedOffsetArrayStructure)
+        writer.writeVarSize(self.api.NestedOffsetUnion.CHOICE_nestedOffsetArrayStructure)
 
         writer.writeBits(self.NUM_ELEMENTS, 8)
         for i in range(self.NUM_ELEMENTS):
@@ -88,6 +88,7 @@ class NestedOffsetTest(unittest.TestCase):
             writer.writeBits(0, 7 if (i == 0) else 1)
             writer.writeBits(i, 31)
 
+        writer.alignTo(8)
         writer.writeBits(self.TERMINATOR_VALUE, 7)
 
     def _checkNestedOffset(self, nestedOffset):
@@ -110,6 +111,8 @@ class NestedOffsetTest(unittest.TestCase):
             nestedOffsetStructure = nestedOffsetStructureList[i]
             self.assertEqual(self.FIRST_DATA_OFFSET + i * 8, nestedOffsetStructure.getDataOffset())
             self.assertEqual(i, nestedOffsetStructure.getData())
+
+        self.assertEqual(self.TERMINATOR_VALUE, nestedOffset.getTerminator())
 
     def _createNestedOffset(self, createWrongOffsets):
         nestedOffsetStructureList = []

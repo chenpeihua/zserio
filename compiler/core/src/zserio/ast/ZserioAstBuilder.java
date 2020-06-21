@@ -110,7 +110,7 @@ public class ZserioAstBuilder extends ZserioParserBaseVisitor<Object>
     @Override
     public ZserioType visitTypeDeclaration(ZserioParser.TypeDeclarationContext ctx)
     {
-        ZserioType type = (ZserioType)super.visitTypeDeclaration(ctx);
+        final ZserioType type = (ZserioType)super.visitTypeDeclaration(ctx);
         currentPackage.addType(type);
         return type;
     }
@@ -198,11 +198,7 @@ public class ZserioAstBuilder extends ZserioParserBaseVisitor<Object>
         if (ctx == null)
             return null;
 
-        final Token token = ctx.DECIMAL_LITERAL().getSymbol();
-        final AstLocation location = new AstLocation(token);
-
-        return new Expression(location, currentPackage, token.getType(), token.getText(),
-                Expression.ExpressionFlag.NONE);
+        return (Expression)visit(ctx.expression());
     }
 
     @Override
@@ -462,12 +458,10 @@ public class ZserioAstBuilder extends ZserioParserBaseVisitor<Object>
         if (ctx == null)
             return null;
 
-        final Token constraintExprToken = ctx.STRING_LITERAL().getSymbol();
-        final AstLocation constraintExprLocation = new AstLocation(constraintExprToken);
-        final Expression constraintExpr = new Expression(constraintExprLocation, currentPackage,
-                constraintExprToken.getType(), constraintExprToken.getText(), Expression.ExpressionFlag.NONE);
+        final AstLocation location = new AstLocation(ctx.expression().getStart());
+        final Expression constraintExpr = (Expression)visit(ctx.expression());
 
-        return new SqlConstraint(constraintExprLocation, constraintExpr);
+        return new SqlConstraint(location, constraintExpr);
     }
 
     @Override
@@ -555,23 +549,15 @@ public class ZserioAstBuilder extends ZserioParserBaseVisitor<Object>
     {
         final AstLocation location = new AstLocation(ctx.id().getStart());
 
-        String topicDefinition = ctx.topicDefinition().STRING_LITERAL().getText();
-        // strip quotes around the string literal
-        topicDefinition = topicDefinition.substring(1, topicDefinition.length() - 1);
+        final Expression topicDefinitionExpr = (Expression)visit(ctx.topicDefinition().expression());
 
-        final boolean isPublished =
-                ctx.topicDefinition().PUBLISH() != null || ctx.topicDefinition().PUBSUB() != null;
-
-        final boolean isSubscribed =
-                ctx.topicDefinition().SUBSCRIBE() != null || ctx.topicDefinition().PUBSUB() != null;
-
+        final boolean isPublished = ctx.topicDefinition().SUBSCRIBE() == null;
+        final boolean isSubscribed = ctx.topicDefinition().PUBLISH() == null;
         final TypeReference typeReference = visitTypeReference(ctx.typeReference());
-
         final String name = ctx.id().getText();
-
         final DocComment docComment = docCommentManager.findDocComment(ctx);
 
-        return new PubsubMessage(location, name, typeReference, topicDefinition, isPublished, isSubscribed,
+        return new PubsubMessage(location, name, typeReference, topicDefinitionExpr, isPublished, isSubscribed,
                 docComment);
     }
 
@@ -778,7 +764,7 @@ public class ZserioAstBuilder extends ZserioParserBaseVisitor<Object>
             // check that there is not space between the two '>'
             if (ctx.GT(0).getSymbol().getCharPositionInLine() + 1 !=
                     ctx.GT(1).getSymbol().getCharPositionInLine())
-                throw new ParserException(ctx.GT().get(0).getSymbol(), "Operator >> cannot contain spaces!");
+                throw new ParserException(ctx.GT().get(0).getSymbol(), "Operator '>>' cannot contain spaces!");
         }
         final String tokenText = tokenType == ZserioParser.RSHIFT ? RSHIFT_OPERATOR : ctx.operator.getText();
 

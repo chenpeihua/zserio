@@ -148,8 +148,8 @@ class WithoutWriterCodeTest(unittest.TestCase):
 
         # static constants
         self.assertTrue(hasattr(userType, "DATABASE_NAME"))
-        self.assertTrue(hasattr(userType, "EUROPE_TABLE_NAME"))
-        self.assertTrue(hasattr(userType, "AMERICA_TABLE_NAME"))
+        self.assertTrue(hasattr(userType, "europe_TABLE_NAME"))
+        self.assertTrue(hasattr(userType, "america_TABLE_NAME"))
 
     def testRead(self):
         writer = zserio.BitStreamWriter()
@@ -238,7 +238,7 @@ class WithoutWriterCodeTest(unittest.TestCase):
                 # Item
                 writer.writeBits(PARAMS[i], 16)
                 # ExtraParamUnion - choiceTag CHOICE_value32
-                writer.writeVarUInt64(self.api.ExtraParamUnion.CHOICE_value32)
+                writer.writeVarSize(self.api.ExtraParamUnion.CHOICE_value32)
                 writer.writeBits(EXTRA_PARAM, 32)
             else:
                 writer.writeBits(PARAMS[i], 16)

@@ -118,7 +118,6 @@ EOF
     cat > ${BUILD_DIR}/spotbugs_filter.xml << EOF
 <FindBugsFilter>
     <Match>
-    <Match>
         <!-- Same code in different switch clauses. -->
         <Bug code="DB"/>
         <Or>
@@ -127,6 +126,14 @@ EOF
             <Method name="read"/>
         </Or>
     </Match>
+    <Match>
+        <!-- This field is never written. -->
+        <Bug code="UwF"/>
+        <Field name="objectChoice"/>
+    </Match>
+    <Match>
+        <!-- Method names should start with a lower case letter. -->
+        <Bug code="Nm"/>
     </Match>${SPOTBUGS_FILTER_SQLITE}
 </FindBugsFilter>
 EOF
@@ -162,14 +169,6 @@ target_include_directories(\${PROJECT_NAME} SYSTEM PRIVATE \${SQLITE_INCDIR})
 target_link_libraries(\${PROJECT_NAME} \${SQLITE_LIBRARY})"
     fi
 
-    local CPP11_SETUP
-    if [ "${RUNTIME_LIBRARY_SUBDIR}" = "cpp" ] ; then
-        CPP11_SETUP="
-
-# setup C++11
-set(CMAKE_CXX_STANDARD 11)"
-    fi
-
     cat > ${BUILD_DIR}/CMakeLists.txt << EOF
 cmake_minimum_required(VERSION 2.8.12.2)
 project(test_zs_${TEST_NAME})
@@ -188,7 +187,7 @@ include(compiler_utils)
 compiler_set_pthread()
 compiler_set_static_clibs()
 compiler_set_warnings()
-compiler_set_warnings_as_errors()${CPP11_SETUP}${SQLITE_SETUP}
+compiler_set_warnings_as_errors()${SQLITE_SETUP}
 
 # add zserio runtime library
 include(zserio_utils)
@@ -197,6 +196,7 @@ zserio_add_runtime_library(RUNTIME_LIBRARY_DIR "\${ZSERIO_RUNTIME_LIBRARY_DIR}")
 
 file(GLOB_RECURSE SOURCES RELATIVE "\${CMAKE_CURRENT_SOURCE_DIR}" "gen/*.cpp" "gen/*.h")
 add_library(\${PROJECT_NAME} \${SOURCES})
+set_target_properties(\${PROJECT_NAME} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
 target_include_directories(\${PROJECT_NAME} PUBLIC "\${CMAKE_CURRENT_SOURCE_DIR}/gen")
 target_link_libraries(\${PROJECT_NAME} ZserioCppRuntime)${SQLITE_USE}
 
@@ -316,7 +316,7 @@ test()
         GEN_DISABLE_OPTION+="too-many-public-methods,too-many-locals,too-many-branches,too-many-statements,"
         GEN_DISABLE_OPTION+="too-many-lines,unneeded-not,superfluous-parens,len-as-condition,"
         GEN_DISABLE_OPTION+="import-self,too-few-public-methods,too-many-function-args,c-extension-no-member,"
-        GEN_DISABLE_OPTION+="simplifiable-if-expression"
+        GEN_DISABLE_OPTION+="simplifiable-if-expression,unused-import"
         local PYLINT_ARGS=("--disable=${GEN_DISABLE_OPTION}" "--ignore=api.py")
         PYTHONPATH="${GEN_PYTHON_DIR}:${PYTHON_RUNTIME_ROOT}" \
         run_pylint "${PYLINT_RCFILE}" PYLINT_ARGS[@] "${GEN_PYTHON_DIR}"/*
@@ -347,19 +347,22 @@ Description:
     Tests given zserio sources with zserio release compiled in release-ver directory.
 
 Usage:
-    $0 [-h] generator... -s test.zs
+    $0 [-h] [-e] [-p] [-o <dir>] [-d <dir>] [-t <name>] [-w] ]generator... -s test.zs
 
 Arguments:
-    -h, --help                Show this help.
-    -e, --help-env            Show help for enviroment variables.
-    -p, --purge               Purge test build directory.
+    -h, --help            Show this help.
+    -e, --help-env        Show help for enviroment variables.
+    -p, --purge           Purge test build directory.
     -o <dir>, --output-directory <dir>
-                              Output directory where tests will be run.
-    -d, --source-dir DIR      Directory with zserio sources. Default is ".".
-    -s, --source SOURCE       Main zserio source.
-    -t, --test-name NAME      Test name. Optional.
-    -w, --werror              Treat zserio warnings as errors.
-    generator                 Specify the generator to test.
+                          Output directory where tests will be run.
+    -d <dir>, --source-dir <dir>
+                          Directory with zserio sources. Default is ".".
+    -t <name>, --test-name <name>
+                          Test name. Optional.
+    -w, --werror          Treat zserio warnings as errors.
+    -s <source>, --source <source>
+                          Main zserio source.
+    generator             Specify the generator to test.
 
 Generator can be:
     cpp-linux32           Generate C++ sources and compile them for linux32 target (GCC).

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -243,6 +244,19 @@ public class Package extends DocumentableAstNode
                 }
             }
         }
+    }
+
+    /** Checks the package. */
+    void check()
+    {
+        if (!packageName.toString().equals(packageName.toString().toLowerCase(Locale.ENGLISH)))
+            throw new ParserException(this, "Package name cannot contain upper case letters!");
+
+        PackageIdentifierValidator validator = new PackageIdentifierValidator();
+        for (ZserioType localType : localTypes.values())
+            validator.validateSymbol(localType.getName(), localType);
+        for (Map.Entry<String, AstNode> localSymbolEntry : localSymbols.entrySet())
+            validator.validateSymbol(localSymbolEntry.getKey(), localSymbolEntry.getValue());
     }
 
     /**

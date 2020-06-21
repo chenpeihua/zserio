@@ -39,6 +39,9 @@ set(ZSERIO_GENERATED_SOURCES
     ${ZSERIO_GEN_DIR}/with_range_check_code/varint64_range_check/VarInt64RangeCheckCompound.cpp
     ${ZSERIO_GEN_DIR}/with_range_check_code/varint64_range_check/VarInt64RangeCheckCompound.h
 
+    ${ZSERIO_GEN_DIR}/with_range_check_code/varsize_range_check/VarSizeRangeCheckCompound.cpp
+    ${ZSERIO_GEN_DIR}/with_range_check_code/varsize_range_check/VarSizeRangeCheckCompound.h
+
     ${ZSERIO_GEN_DIR}/with_range_check_code/varuint16_range_check/VarUInt16RangeCheckCompound.cpp
     ${ZSERIO_GEN_DIR}/with_range_check_code/varuint16_range_check/VarUInt16RangeCheckCompound.h
 
@@ -55,26 +58,28 @@ zserio_add_library(TARGET with_range_check_code_zs
     OUT_DIR ${ZSERIO_GEN_DIR}
     OUT_FILES ${ZSERIO_GENERATED_SOURCES}
     ZSERIO_CORE_DIR ${ZSERIO_JAR_DIR}
+    ZSERIO_CPP_DIR ${ZSERIO_CPP_DISTR_DIR}
     ZSERIO_OPTIONS -withRangeCheckCode -withoutSourcesAmalgamation
 )
 
 add_test_sources(
-    ${ZSERIO_CPP_DIR}/Bit4RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/ChoiceBit4RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/DynamicBitRangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/DynamicIntRangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/Int4RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/Int7ArrayRangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/Int8RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/OptionalBit31RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/UInt8RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/UnionInt4RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarInt16RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarInt32RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarInt64RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarUInt16RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarUInt32RangeCheckTest.cpp
-    ${ZSERIO_CPP_DIR}/VarUInt64RangeCheckTest.cpp
+    cpp/Bit4RangeCheckTest.cpp
+    cpp/ChoiceBit4RangeCheckTest.cpp
+    cpp/DynamicBitRangeCheckTest.cpp
+    cpp/DynamicIntRangeCheckTest.cpp
+    cpp/Int4RangeCheckTest.cpp
+    cpp/Int7ArrayRangeCheckTest.cpp
+    cpp/Int8RangeCheckTest.cpp
+    cpp/OptionalBit31RangeCheckTest.cpp
+    cpp/UInt8RangeCheckTest.cpp
+    cpp/UnionInt4RangeCheckTest.cpp
+    cpp/VarInt16RangeCheckTest.cpp
+    cpp/VarInt32RangeCheckTest.cpp
+    cpp/VarInt64RangeCheckTest.cpp
+    cpp/VarSizeRangeCheckTest.cpp
+    cpp/VarUInt16RangeCheckTest.cpp
+    cpp/VarUInt32RangeCheckTest.cpp
+    cpp/VarUInt64RangeCheckTest.cpp
 )
 
 add_test_dependencies(with_range_check_code_zs)

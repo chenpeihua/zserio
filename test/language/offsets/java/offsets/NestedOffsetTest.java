@@ -130,7 +130,7 @@ public class NestedOffsetTest
 
         writer.writeUnsignedInt((writeWrongOffsets) ? WRONG_TERMINATOR_OFFSET : TERMINATOR_OFFSET);
         writer.writeBool(BOOL_VALUE);
-        writer.writeVarUInt64(NestedOffsetUnion.CHOICE_nestedOffsetArrayStructure); // union's choice tag
+        writer.writeVarSize(NestedOffsetUnion.CHOICE_nestedOffsetArrayStructure); // union's choice tag
         writer.writeUnsignedByte(NUM_ELEMENTS);
         for (short i = 0; i < NUM_ELEMENTS; ++i)
         {
@@ -139,6 +139,7 @@ public class NestedOffsetTest
             writer.writeBits(i, 31);
         }
 
+        writer.alignTo(8);
         writer.writeBits(TERMINATOR_VALUE, 7);
 
         writer.close();
@@ -168,6 +169,8 @@ public class NestedOffsetTest
             assertEquals(FIRST_DATA_OFFSET + i * 8L, nestedOffsetStructure.getDataOffset());
             assertEquals(i, nestedOffsetStructure.getData());
         }
+
+        assertEquals(TERMINATOR_VALUE, nestedOffset.getTerminator());
     }
 
     private NestedOffset createNestedOffset(boolean createWrongOffsets)

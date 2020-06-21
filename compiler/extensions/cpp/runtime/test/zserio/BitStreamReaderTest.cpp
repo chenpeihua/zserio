@@ -17,7 +17,7 @@ public:
     }
 
 protected:
-    zserio::BitStreamReader m_reader;
+    BitStreamReader m_reader;
     static const size_t BUFFER_SIZE = 16;
 
 private:
@@ -25,6 +25,61 @@ private:
 };
 
 const size_t BitStreamReaderTest::BUFFER_SIZE;
+
+TEST_F(BitStreamReaderTest, bitBufferConstructor)
+{
+    BitBuffer bitBuffer(17);
+    bitBuffer.getBuffer()[0] = 0xAE;
+    bitBuffer.getBuffer()[1] = 0xEA;
+    bitBuffer.getBuffer()[2] = 0x80;
+    BitStreamReader reader(bitBuffer);
+
+    ASSERT_EQ(bitBuffer.getBitSize(), reader.getBufferBitSize());
+    ASSERT_EQ(0xAEE, reader.readBits(12));
+    ASSERT_EQ(0x0A, reader.readBits(4));
+    ASSERT_EQ(0x01, reader.readBits(1));
+
+    ASSERT_THROW(reader.readBits(1), CppRuntimeException);
+}
+
+TEST_F(BitStreamReaderTest, bitBufferConstructorOverflow)
+{
+    BitBuffer bitBuffer(19);
+    bitBuffer.getBuffer()[0] = 0xFF;
+    bitBuffer.getBuffer()[1] = 0xFF;
+    bitBuffer.getBuffer()[2] = 0xF0;
+    BitStreamReader reader(bitBuffer);
+
+    ASSERT_EQ(bitBuffer.getBitSize(), reader.getBufferBitSize());
+    ASSERT_THROW(reader.readBits(20), CppRuntimeException);
+}
+
+TEST_F(BitStreamReaderTest, readUnalignedData)
+{
+    // number expected to read at offset
+    const uint8_t testValue = 123;
+
+    for (int offset = 0; offset <= 64; ++offset)
+    {
+        BitBuffer buffer(8 + offset);
+
+        // write test value at offset to data buffer
+        buffer.getBuffer()[offset / 8] = testValue >> (offset % 8);
+        if (offset % 8 != 0) // don't write behind the buffer
+            buffer.getBuffer()[offset / 8 + 1] = testValue << (8 - (offset % 8));
+
+        BitStreamReader reader(buffer);
+
+        // read offset bits
+        ASSERT_EQ(0u, reader.readBits64(offset));
+
+        // read magic number
+        ASSERT_EQ(testValue, reader.readBits(8)) << "Offset: " << offset;
+
+        // check eof
+        ASSERT_THROW(reader.readBits(1), CppRuntimeException);
+    }
+}
 
 TEST_F(BitStreamReaderTest, readBits)
 {
@@ -76,6 +131,23 @@ TEST_F(BitStreamReaderTest, readSignedBits64)
 
     // return 0 for 0 bits
     ASSERT_EQ(0, m_reader.readSignedBits64(0));
+}
+
+TEST_F(BitStreamReaderTest, readVarSize)
+{
+    {
+        // overflow, 2^32 - 1 is too much ({ 0x83, 0xFF, 0xFF, 0xFF, 0xFF } is the maximum)
+        uint8_t buffer[] = { 0x87, 0xFF, 0xFF, 0xFF, 0xFF };
+        zserio::BitStreamReader reader(buffer, sizeof(buffer) / sizeof(buffer[0]));
+        ASSERT_THROW(reader.readVarSize(), CppRuntimeException);
+    }
+
+    {
+        // overflow, 2^36 - 1 is too much ({ 0x83, 0xFF, 0xFF, 0xFF, 0xFF } is the maximum)
+        uint8_t buffer[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+        zserio::BitStreamReader reader(buffer, sizeof(buffer) / sizeof(buffer[0]));
+        ASSERT_THROW(reader.readVarSize(), CppRuntimeException);
+    }
 }
 
 TEST_F(BitStreamReaderTest, getBitPosition)

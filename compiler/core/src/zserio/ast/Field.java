@@ -220,6 +220,9 @@ public class Field extends DocumentableAstNode
                         "' is not an unsigned integer type!");
             }
 
+            if (offsetExpr.containsFunctionCall())
+                throw new ParserException(offsetExpr, "Function call cannot be used in offset expression!");
+
             if (offsetExpr.op2() == null)
                 checkSingleOffsetExpression();
         }
@@ -261,16 +264,6 @@ public class Field extends DocumentableAstNode
             if (constraintExpr.getExprType() != Expression.ExpressionType.BOOLEAN)
                 throw new ParserException(constraintExpr, "Constraint expression for field '" +
                         getName() + "' is not boolean!");
-        }
-
-        // check field name
-        final ZserioType definedType = pkg.getVisibleType(this, PackageName.EMPTY, getName());
-        if (definedType != null)
-        {
-            final ParserStackedException stackedException = new ParserStackedException(getLocation(),
-                    "'" + getName() + "' is a defined type in this package!");
-            stackedException.pushMessage(definedType.getLocation(), "    First defined here");
-            throw stackedException;
         }
     }
 

@@ -8,9 +8,46 @@ from zserio.exception import PythonRuntimeException
 class BitStreamReaderTest(unittest.TestCase):
 
     def testFromBitBuffer(self):
-        bitBuffer = BitBuffer(bytes([0x0B, 0xAB, 0xE0]), 19)
+        bitBuffer = BitBuffer(bytes([0xAE, 0xEA, 0x80]), 17)
         reader = BitStreamReader.fromBitBuffer(bitBuffer)
-        self.assertEqual(BitBuffer(bytes([0xAB, 0x07]), 11), reader.readBitBuffer())
+        self.assertEqual(bitBuffer.getBitSize(), reader.getBufferBitSize())
+        self.assertEqual(0xAEE, reader.readBits(12))
+        self.assertEqual(0x0A, reader.readBits(4))
+        self.assertEqual(0x01, reader.readBits(1))
+        with self.assertRaises(PythonRuntimeException):
+            reader.readBits(1)
+
+    def testFromBitBufferOverflow(self):
+        bitBuffer = BitBuffer(bytes([0xFF, 0xFF, 0xF0]), 19)
+        reader = BitStreamReader.fromBitBuffer(bitBuffer)
+        self.assertEqual(bitBuffer.getBitSize(), reader.getBufferBitSize())
+        with self.assertRaises(PythonRuntimeException):
+            reader.readBits(20)
+
+    def testReadUnalignedData(self):
+        # number expected to read at offset
+        testValue = 123
+
+        for offset in range(65):
+            buffer = bytearray((8 + offset + 7) // 8)
+
+            # write test value at offset to data buffer
+            buffer[offset // 8] = testValue >> (offset % 8)
+            if offset % 8 != 0: # don't write behind the buffer
+                buffer[offset // 8 + 1] = 0xff & testValue << (8 - offset % 8)
+
+            bitBuffer = BitBuffer(buffer, 8 + offset)
+            reader = BitStreamReader.fromBitBuffer(bitBuffer)
+
+            # read offset bits
+            self.assertEqual(0, reader.readBits(offset))
+
+            # read magic number
+            self.assertEqual(testValue, reader.readBits(8), msg=("Offset: " + str(offset)))
+
+            # check eof
+            with self.assertRaises(PythonRuntimeException):
+                reader.readBits(1)
 
     def testReadBits(self):
         data = [0, 1, 255, 128, 127]
@@ -101,6 +138,17 @@ class BitStreamReaderTest(unittest.TestCase):
         with self.assertRaises(PythonRuntimeException):
             reader.readVarUInt()
 
+    def testReadVarSize(self):
+        # overflow, 2^32 - 1 is too much (b'\x83\xFF\xFF\xFF\xFF') is the maximum)
+        reader = BitStreamReader(b'\x87\xFF\xFF\xFF\xFF')
+        with self.assertRaises(PythonRuntimeException):
+            reader.readVarSize()
+
+        # overflow, 2^36 - 1 is too much (b'\x83\xFF\xFF\xFF\xFF') is the maximum)
+        reader = BitStreamReader(b'\xFF\xFF\xFF\xFF\xFF')
+        with self.assertRaises(PythonRuntimeException):
+            reader.readVarSize()
+
     def testReadFloat16(self):
         reader = BitStreamReader(bytes(2))
         self.assertEqual(0.0, reader.readFloat16())
@@ -144,8 +192,8 @@ class BitStreamReaderTest(unittest.TestCase):
 
     def testReadBitBuffer(self):
         reader = BitStreamReader(bytes(b'\x0B\xAB\xE1\xE0\x1F\xC0'))
-        self.assertEqual(BitBuffer(bytes([0xAB, 0x07]), 11), reader.readBitBuffer())
-        self.assertEqual(BitBuffer(bytes([0x00, 0x7F]), 15), reader.readBitBuffer())
+        self.assertEqual(BitBuffer(bytes([0xAB, 0xE0]), 11), reader.readBitBuffer())
+        self.assertEqual(BitBuffer(bytes([0x00, 0xFE]), 15), reader.readBitBuffer())
         with self.assertRaises(PythonRuntimeException):
             reader.readBitBuffer()
 

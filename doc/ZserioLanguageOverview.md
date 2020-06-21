@@ -1,4 +1,4 @@
-# Zserio 1.0 Language Overview
+# Zserio Language Overview
 
 This document contains a detailed specification of the zserio schema language. The Zserio Language Overview
 document is targeted for developers who write zserio schema definitions.
@@ -149,9 +149,9 @@ Floating point types are modeled after the IEEE 754 specification. The following
 ### Variable Integer Types
 
 Variable integer types store integer values but the number of bytes used is dependent on the actual value stored
-in the data type. The supported types are `varint16`, `varint32`, `varint64` and `varint` for the signed values
-and `varuint16`, `varuint32`, `varuint64` and `varuint` for the unsigned signed values. This is a special type
-of integer that uses only the bytes needed to store the value.
+in the data type. The supported types are `varint16`, `varint32`, `varint64` and `varint` for
+the signed values and `varuint16`, `varuint32`, `varuint64`, `varuint` and `varsize` for the unsigned
+signed values. This is a special type of integer that uses only the bytes needed to store the value.
 
 The value ranges of the variable integer types are:
 
@@ -165,6 +165,7 @@ varuint16    | `0 to 32767`                                  | `2`
 varuint32    | `0 to 536870911`                              | `4`
 varuint64    | `0 to 144115188075855871`                     | `8`
 varuint      | `0 to 18446744073709551615`                   | `9`
+varsize      | `0 to 2147483647`                             | `5`
 
 >Note that `varint` and `varuint` can handle all `int64` and `uint64` values respectively.
 
@@ -218,6 +219,11 @@ varuint      | `[byte 1]: 1 bit has next byte, 7 bits value`
  <sup></sup> | `[byte 7]: 1 bit has next byte, 7 bits value`
  <sup></sup> | `[byte 8]: 1 bit has next byte, 7 bits value`
  <sup></sup> | `[byte 9]: 8 bits value`
+varsize      | `[byte 1]: 1 bit has next byte, 7 bits value`
+ <sup></sup> | `[byte 2]: 1 bit has next byte, 7 bits value`
+ <sup></sup> | `[byte 3]: 1 bit has next byte, 7 bits value`
+ <sup></sup> | `[byte 4]: 1 bit has next byte, 7 bits value`
+ <sup></sup> | `[byte 5]: 8 bits value`
 
 ### Boolean Type
 
@@ -1523,12 +1529,12 @@ client.
 ```
 pubsub WeatherProvider
 {
-    publish("weather/warnings") WeatherWarning warnings;
+    publish topic("weather/warnings") WeatherWarning warnings;
 };
 
 pubsub WeatherClient
 {
-    subscribe("weather/warnings") WeatherWarning weatherWarnings;
+    subscribe topic("weather/warnings") WeatherWarning weatherWarnings;
 };
 
 struct WeatherWarning
@@ -1545,14 +1551,14 @@ topic "weather/warnings". The client expects that the type of messages arriving 
 subscription (i.e. published under the defined topic) are of the type `WeatherWarning`.
 
 Pubsub type can define a message in three ways:
-   * `publish("topic/definition") Type message` to publish a message,
-   * `subscribe("topic/definition") Type message` to subscribe a message,
-   * `pubsub("topic/definition") Type message` to both publish and subscribe a message.
+   * `topic("topic/definition") Type message` to both publish and subscribe a message,
+   * `publish topic("topic/definition") Type message` to publish a message,
+   * `subscribe topic("topic/definition") Type message` to subscribe a message.
 
 ### Topic Definition
 
 In the Pub/Sub pattern, it is common to use wildcards for topic definitions in subscriptions. The wildcards
-format depends and a particular implementation. Zserio only provides a generic definition of Pub/Sub clients
+format depends on a particular implementation. Zserio only provides a generic definition of Pub/Sub clients
 and doesn't manipulate with the topic definition string. It therefore depends on the particular Pub/Sub backend
 whether the wildcards are supported and how. See the
 [MQTT standard](https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Topic_Names_and)
@@ -1611,8 +1617,8 @@ In zserio it is possible to express the above example as follows:
 ```
 sql_table GeoMap
 {
-    int32   tileId sql "PRIMARY KEY";
-    Tile    tile;
+    int32   tileId sql "PRIMARY KEY NOT NULL";
+    Tile    tile sql "NOT NULL";
 };
 
 GeoMap europe;
@@ -1624,17 +1630,13 @@ It is important to note that the `GeoMap` is a table type and not a table. A tab
 with identical structure and column names. Each instance of an `sql_table` type in zserio translates to an
 SQLite SQL table where the table name in the SQL schema is equal to the instance name in zserio. A member
 definition may include an SQL constraint introduced by the keyword `sql`, followed by a literal string which is
-preprocessed and then passed to the SQLite engine.
+then passed to the SQLite engine.
 
 Thus, the zserio instance `america` results in the following SQL table:
 
 ```
-CREATE TABLE america (tileNum INT NOT NULL PRIMARY KEY, tile BLOB NOT NULL);
+CREATE TABLE america (tileNum INT PRIMARY KEY NOT NULL, tile BLOB NOT NULL);
 ```
-
-Per default a column constraint of `NOT NULL` is used for each column, meaning there must always be a value in
-the column. To loosen this constraint `sql` can be used to inject pure SQL to allow `NULL` in a column or
-tighten the constraint to make the column `UNIQUE`.
 
 It is also possible to use the zserio keyword `sql` directly inside the table definition. The main use for this
 syntax is to define a primary key spanning multiple fields.
@@ -1644,10 +1646,10 @@ syntax is to define a primary key spanning multiple fields.
 ```
 sql_table BusinessLocationTable
 {
-    BusinessId  businessId;
-    CategoryId  catId;
+    BusinessId  businessId sql "NOT NULL";
+    CategoryId  catId sql "NOT NULL";
     Position    position sql "UNIQUE";
-    int8        hasIcon sql "NULL";
+    int8        hasIcon;
 
     sql "PRIMARY KEY(businessId, catId)";
 };
@@ -1657,42 +1659,6 @@ SQL table types can be templated using the same syntax as other zserio compound 
 [templates](#templates).
 
 For the mapping of zserio types to SQL types, refer to [SQL Types Mapping](#sqlite-types-mapping).
-
-### SQLite Constraints Preprocessing
-
-SQL constraint strings are preprocessed before they are passed to SQLite. This allows
-
-- to support zserio values inside constraint strings and
-- to convert unicode, hexadecimal and octal string escape sequences.
-
-#### Zserio Values Handling
-
-The preprocessor replaces all strings of the form `@DataScriptIdentifier` with the value of the identifier.
-Only identifiers, which are either zserio constants or zserio enumeration or bitmask type values, are replaced.
-
-**Example**
-
-```
-enum uint8 Enum
-{
-    VALUE1,
-    VALUE2
-};
-
-const int8 Constant = 123;
-
-sql_table Foo
-{
-    uint32  colA sql "PRIMARY KEY";
-    uint16  colB sql "CHECK(colB < @Constant)";
-    Enum    type;
-
-    sql "CHECK(type = @Enum.VALUE1 or colA = 0)";
-};
-```
-
-A syntax error is reported if a `@`-reference is used in a SQL constraint that does not match a zserio
-constant or enumeration value.
 
 ### SQLite Virtual Tables
 
@@ -1795,7 +1761,7 @@ A `sql_without_rowid` keyword is always a part of the `sql_table` type:
 ```
 sql_table WithoutRowIdTable
 {
-    string  word sql "PRIMARY KEY";
+    string  word sql "PRIMARY KEY NOT NULL";
     uint32  count;
 
     sql_without_rowid;

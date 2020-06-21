@@ -1,6 +1,3 @@
-/**
- *
- */
 package zserio.runtime.io;
 
 import static org.junit.Assert.assertEquals;
@@ -138,6 +135,35 @@ public class ByteArrayBitStreamWriterTest
 
         final byte[] b = writer.toByteArray();
         assertEquals(b.length * 8L, 32);
+    }
+
+    @Test
+    public void writeUnalignedData() throws IOException
+    {
+        // number expected to be written at offset
+        final int testValue = 123;
+
+        for (int offset = 0; offset <= 63; ++offset)
+        {
+            final int bufferByteSize = (8 + offset + 7) / 8;
+            final ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter(bufferByteSize);
+            // fill the buffer with 1s to check proper masking
+            for (int i = 0; i < bufferByteSize; ++i)
+                writer.writeBits(0xFF, 8);
+
+            writer.setBitPosition(0);
+
+            if (offset != 0)
+                writer.writeBits(0, offset);
+            writer.writeBits(testValue, 8);
+
+            // check written value
+            byte[] writtenData = writer.toByteArray();
+            int writtenTestValue = ((int)writtenData[offset / 8]) << (offset % 8);
+            if (offset % 8 != 0)
+                writtenTestValue |= (0xFF & writtenData[offset / 8 + 1]) >>> (8 - (offset % 8));
+            assertEquals("offset: " + offset, testValue, writtenTestValue);
+        }
     }
 
     @Test
@@ -832,6 +858,60 @@ public class ByteArrayBitStreamWriterTest
                 // 4 bytes
                 assertEquals(0x80ffffffL, reader.readBits(32));
                 assertEquals(0xffffffffL, reader.readBits(32));
+            }
+        });
+    }
+
+    @Test
+    public void writeVarSize() throws IOException
+    {
+        writeReadTest(new WriteReadTestable(){
+            @Override
+            public void write(ByteArrayBitStreamWriter writer) throws IOException
+            {
+                // 1 byte
+                writer.writeVarSize(0);
+                writer.writeVarSize(0x7f);
+
+                // 2 bytes
+                writer.writeVarSize(0xff);
+                writer.writeVarSize(0x3fff);
+
+                // 3 bytes
+                writer.writeVarSize(0x7fff);
+                writer.writeVarSize(0x1fffff);
+
+                // 4 bytes
+                writer.writeVarSize(0x3fffff);
+                writer.writeVarSize(0xfffffff);
+
+                // 5 bytes
+                writer.writeVarSize(0x1fffffff);
+                writer.writeVarSize(0x7fffffff);
+            }
+
+            @Override
+            public void read(ImageInputStream reader) throws IOException
+            {
+                // 1 byte
+                assertEquals(0x00, reader.readBits(8));    // 0
+                assertEquals(0x7f, reader.readBits(8));    // 1111111b = 0x7f
+
+                // 2 bytes
+                assertEquals(0x817f, reader.readBits(16));
+                assertEquals(0xff7f, reader.readBits(16));
+
+                // 3 bytes
+                assertEquals(0x81ff7f, reader.readBits(24));
+                assertEquals(0xffff7f, reader.readBits(24));
+
+                // 4 bytes
+                assertEquals(0x81ffff7fL, reader.readBits(32));
+                assertEquals(0xffffff7fL, reader.readBits(32));
+
+                // 5 bytes
+                assertEquals(0x80ffffffffL, reader.readBits(40));
+                assertEquals(0x83ffffffffL, reader.readBits(40));
             }
         });
     }

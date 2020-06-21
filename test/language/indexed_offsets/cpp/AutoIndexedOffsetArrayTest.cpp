@@ -2,6 +2,7 @@
 
 #include "zserio/BitStreamWriter.h"
 #include "zserio/BitStreamReader.h"
+#include "zserio/CppRuntimeException.h"
 
 #include "indexed_offsets/auto_indexed_offset_array/AutoIndexedOffsetArray.h"
 
@@ -15,7 +16,7 @@ class AutoIndexedOffsetArrayTest : public ::testing::Test
 protected:
     void writeAutoIndexedOffsetArrayToByteArray(zserio::BitStreamWriter& writer, bool writeWrongOffsets)
     {
-        writer.writeVarUInt64(NUM_ELEMENTS);
+        writer.writeVarSize(NUM_ELEMENTS);
         const uint32_t wrongOffset = WRONG_OFFSET;
         uint32_t currentOffset = ELEMENT0_OFFSET;
         for (uint8_t i = 0; i < NUM_ELEMENTS; ++i)
@@ -29,7 +30,7 @@ protected:
 
         writer.writeBits(SPACER_VALUE, 1);
 
-        writer.writeVarUInt64(NUM_ELEMENTS);
+        writer.writeVarSize(NUM_ELEMENTS);
         writer.writeBits(0, 7);
         for (uint8_t i = 0; i < NUM_ELEMENTS; ++i)
         {

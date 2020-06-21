@@ -22,7 +22,7 @@ public class SimpleUnionTest
     public void emptyConstructor()
     {
         SimpleUnion simpleUnion = new SimpleUnion();
-        assertEquals(SimpleUnion.CHOICE_UNDEFINED, simpleUnion.choiceTag());
+        assertEquals(SimpleUnion.UNDEFINED_CHOICE, simpleUnion.choiceTag());
     }
 
     @Test(expected=ZserioError.class)
@@ -64,7 +64,7 @@ public class SimpleUnionTest
     public void choiceTag()
     {
         SimpleUnion simpleUnion = new SimpleUnion();
-        assertEquals(SimpleUnion.CHOICE_UNDEFINED, simpleUnion.choiceTag());
+        assertEquals(SimpleUnion.UNDEFINED_CHOICE, simpleUnion.choiceTag());
         simpleUnion.setCase1Field(CASE1_FIELD);
         assertEquals(SimpleUnion.CHOICE_case1Field, simpleUnion.choiceTag());
         simpleUnion.setCase2Field(CASE2_FIELD);
@@ -315,25 +315,25 @@ public class SimpleUnionTest
 
     private static void writeSimpleUnionCase1ToByteArray(BitStreamWriter writer) throws IOException
     {
-        writer.writeVarUInt64(SimpleUnion.CHOICE_case1Field); // choice tag
+        writer.writeVarSize(SimpleUnion.CHOICE_case1Field); // choice tag
         writer.writeSignedBits(CASE1_FIELD, 8);
     }
 
     private static void writeSimpleUnionCase2ToByteArray(BitStreamWriter writer) throws IOException
     {
-        writer.writeVarUInt64(SimpleUnion.CHOICE_case2Field); // choice tag
+        writer.writeVarSize(SimpleUnion.CHOICE_case2Field); // choice tag
         writer.writeBits(CASE2_FIELD, 16);
     }
 
     private static void writeSimpleUnionCase3ToByteArray(BitStreamWriter writer) throws IOException
     {
-        writer.writeVarUInt64(SimpleUnion.CHOICE_case3Field); // choice tag
+        writer.writeVarSize(SimpleUnion.CHOICE_case3Field); // choice tag
         writer.writeString(CASE3_FIELD);
     }
 
     private static void writeSimpleUnionCase4ToByteArray(BitStreamWriter writer) throws IOException
     {
-        writer.writeVarUInt64(SimpleUnion.CHOICE_case4Field); // choice tag
+        writer.writeVarSize(SimpleUnion.CHOICE_case4Field); // choice tag
         writer.writeSignedBits(CASE4_FIELD, 8);
     }
 
